@@ -19,6 +19,8 @@ SELF_SETTING = {
     'driver': 494524660763852803,
 }
 
+KIERAN_ROLE_ID = 500000697522192405
+
 
 class VEX:
     """Core commands"""
@@ -78,6 +80,10 @@ class VEX:
                 e.add_field(name=role.name, value=f'`{ctx.prefix}iam {i}`')
         
         await ctx.send(embed=e)
+    
+    async def on_member_join(self, member):
+        if member.guild.id == 498229213866754058:
+            await member.add_role(discord.Object(KIERAN_ROLE_ID))
 
         
 def setup(bot):
