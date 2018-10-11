@@ -83,7 +83,7 @@ class VEX:
     
     async def on_member_join(self, member):
         if member.guild.id == 498229213866754058:
-            await member.add_role(discord.Object(KIERAN_ROLE_ID))
+            await member.add_roles(discord.Object(KIERAN_ROLE_ID))
 
         
 def setup(bot):
