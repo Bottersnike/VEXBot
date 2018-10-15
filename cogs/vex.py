@@ -1,7 +1,9 @@
 import subprocess
 import asyncio
 import inspect
+import time
 import sys
+import os
 
 from discord.ext import commands
 import ruamel.yaml as yaml
@@ -22,11 +24,101 @@ SELF_SETTING = {
 KIERAN_ROLE_ID = 500000697522192405
 
 
+TRACK_GUILD = 498229213866754058
+
+
 class VEX:
-    """Core commands"""
+    VOICE_F = 'state/voice.txt'
+    MSG_F = 'state/msg.txt'
+
+    def __init__(self, bot):
+        self.bot = bot
+        
+        self.tracking = self.load_tracking()
+        
+        self.join_times = {}
+
     async def __local_check(self, ctx):
         return right_channel(ctx)
 
+    def save_tracking(self):
+        with open(self.VOICE_F, 'w') as voice:
+            voice.write('\n'.join(f'{k}:{self.tracking["voice"][k]}' for k in self.tracking['voice']))
+        with open(self.MSG_F, 'w') as msg:
+            msg.write('\n'.join(f'{k}:{self.tracking["messages"][k]}' for k in self.tracking['messages']))
+    
+    def load_tracking(self):
+        tracking = {'voice': {}, 'messages': {}}
+        
+        if os.path.exists(self.VOICE_F):
+            with open(self.VOICE_F) as voice:
+                for line in voice:
+                    if not line.strip():
+                        continue
+                    tracking['voice'][int(line.split(':', 1)[0])] = int(line.split(':', 1)[1])
+
+        if os.path.exists(self.MSG_F):
+            with open(self.MSG_F) as msg:
+                for line in msg:
+                    if not line.strip():
+                        continue
+                    tracking['messages'][int(line.split(':', 1)[0])] = int(line.split(':', 1)[1])
+        
+        return tracking
+        
+    async def on_message(self, message):
+        if message.guild is not None and message.guild.id == TRACK_GUILD:
+            if message.author.id not in self.tracking['messages']:
+                self.tracking['messages'][message.author.id] = 0
+            self.tracking['messages'][message.author.id] += 1
+            self.save_tracking()
+    
+    async def on_voice_state_update(self, member, before, after):
+        if member.guild is not None and member.guild.id == TRACK_GUILD:
+            if before.channel is None and after.channel is not None:
+                self.join_times[member.id] = time.time()
+            elif before.channel is not None and after.channel is None:
+                if member.id in self.join_times:
+                    time_spent = time.time() - self.join_times[member.id]
+                    self.bot.logger.info(f'{member} just left {before.channel} after {time_spent} seconds')
+
+                    if member.id not in self.tracking['voice']:
+                        self.tracking['voice'][member.id] = 0
+                    self.tracking['voice'][member.id] += round(time_spent)
+                    self.save_tracking()
+        
+    @commands.command()
+    async def top(self, ctx):
+        if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
+            return
+
+        msg = '**Tᴏᴘ Mᴇssᴀɢᴇ Cᴏᴜɴᴛs:**\n'
+        counts = sorted(self.tracking['messages'].items(), key=lambda x: x[1], reverse=True)
+        counts = counts[:10]
+        
+        for n, i in enumerate(counts):
+            member = ctx.guild.get_member(i[0]) or i[0]
+            member = str(member).replace('`', '')
+            msg += f'#{n + 1}: `{member}` _({i[1]})_\n'
+        
+        await ctx.send(msg)
+        
+    @commands.command()
+    async def vtop(self, ctx):
+        if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
+            return
+
+        msg = '**Tᴏᴘ Tɪᴍᴇ ɪɴ VC:**\n'
+        counts = sorted(self.tracking['voice'].items(), key=lambda x: x[1], reverse=True)
+        counts = counts[:10]
+        
+        for n, i in enumerate(counts):
+            member = ctx.guild.get_member(i[0]) or i[0]
+            member = str(member).replace('`', '')
+            msg += f'#{n + 1}: `{member}` _({i[1]} seconds)_\n'
+        
+        await ctx.send(msg)
+        
     @commands.command()
     @is_developer()
     async def list_roles(self, ctx):
@@ -87,4 +179,4 @@ class VEX:
 
         
 def setup(bot):
-    bot.add_cog(VEX())
+    bot.add_cog(VEX(bot))
