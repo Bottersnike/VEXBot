@@ -127,6 +127,29 @@ class VEX:
         
         await ctx.send(msg)
 
+    async def all_time(self, ctx, name, title):
+        data = {}
+        for i in os.listdir('state'):
+            if i.startswith(name):
+                with open('state/' + i) as f:
+                    for line in f:
+                        m, c = line.split(':')
+                        if int(m) not in data:
+                            data[int(m)] = int(c)
+                        else:
+                            data[int(m)] += int(c)
+        
+        await self.do_top(ctx, data, title)
+
+    @commands.command()
+    async def atop(self, ctx):
+        if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
+            return
+        await all_time(ctx, 'msg', 'All Time Messages')
+        await all_time(ctx, 'voice', 'All Time Seconds in VC')
+        await all_time(ctx, 'char', 'All Time Characters')
+        await all_time(ctx, 'word', 'All Time Words')
+
     @commands.command()
     async def top(self, ctx):
         if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
