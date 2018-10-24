@@ -145,10 +145,10 @@ class VEX:
     async def atop(self, ctx):
         if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
             return
-        await all_time(ctx, 'msg', 'All Time Messages')
-        await all_time(ctx, 'voice', 'All Time Seconds in VC')
-        await all_time(ctx, 'char', 'All Time Characters')
-        await all_time(ctx, 'word', 'All Time Words')
+        await self.all_time(ctx, 'msg', 'All Time Messages')
+        await self.all_time(ctx, 'voice', 'All Time Seconds in VC')
+        await self.all_time(ctx, 'char', 'All Time Characters')
+        await self.all_time(ctx, 'word', 'All Time Words')
 
     @commands.command()
     async def top(self, ctx):
