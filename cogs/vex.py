@@ -30,6 +30,8 @@ TRACK_GUILD = 498229213866754058
 class VEX:
     VOICE_F = 'state/voice.txt'
     MSG_F = 'state/msg.txt'
+    CHAR_F = 'state/char.txt'
+    WORD_F = 'state/word.txt'
 
     def __init__(self, bot):
         self.bot = bot
@@ -46,6 +48,10 @@ class VEX:
             voice.write('\n'.join(f'{k}:{self.tracking["voice"][k]}' for k in self.tracking['voice']))
         with open(self.MSG_F, 'w') as msg:
             msg.write('\n'.join(f'{k}:{self.tracking["messages"][k]}' for k in self.tracking['messages']))
+        with open(self.CHAR_F, 'w') as msg:
+            msg.write('\n'.join(f'{k}:{self.tracking["chars"][k]}' for k in self.tracking['chars']))
+        with open(self.WORD_F, 'w') as msg:
+            msg.write('\n'.join(f'{k}:{self.tracking["words"][k]}' for k in self.tracking['words']))
     
     def load_tracking(self):
         tracking = {'voice': {}, 'messages': {}}
@@ -63,6 +69,20 @@ class VEX:
                     if not line.strip():
                         continue
                     tracking['messages'][int(line.split(':', 1)[0])] = int(line.split(':', 1)[1])
+
+        if os.path.exists(self.CHAR_F):
+            with open(self.CHAR_F) as char:
+                for line in char:
+                    if not line.strip():
+                        continue
+                    tracking['chars'][int(line.split(':', 1)[0])] = int(line.split(':', 1)[1])
+
+        if os.path.exists(self.WORD_F):
+            with open(self.WORD_F) as word:
+                for line in word:
+                    if not line.strip():
+                        continue
+                    tracking['words'][int(line.split(':', 1)[0])] = int(line.split(':', 1)[1])
         
         return tracking
         
@@ -70,7 +90,14 @@ class VEX:
         if message.guild is not None and message.guild.id == TRACK_GUILD:
             if message.author.id not in self.tracking['messages']:
                 self.tracking['messages'][message.author.id] = 0
+            if message.author.id not in self.tracking['words']:
+                self.tracking['words'][message.author.id] = 0
+            if message.author.id not in self.tracking['chars']:
+                self.tracking['chars'][message.author.id] = 0
+
             self.tracking['messages'][message.author.id] += 1
+            self.tracking['chars'][message.author.id] += len(message.content)
+            self.tracking['words'][message.author.id] += message.content.count(' ') + 1
             self.save_tracking()
     
     async def on_voice_state_update(self, member, before, after):
