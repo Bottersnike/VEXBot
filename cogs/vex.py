@@ -139,21 +139,21 @@ class VEX:
         if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
             return
 
-        await self.do_top(ctx, 'Tᴏᴘ Tɪᴍᴇ ɪɴ VC', self.tracking['voice'])
+        await self.do_top(ctx, self.tracking['voice'], 'Tᴏᴘ Tɪᴍᴇ ɪɴ VC')
 
     @commands.command()
     async def ctop(self, ctx):
         if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
             return
 
-        await self.do_top(ctx, 'Top Characters Posted', self.tracking['chars'])
+        await self.do_top(ctx, self.tracking['chars'], 'Top Characters Posted')
 
     @commands.command()
     async def wtop(self, ctx):
         if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
             return
 
-        await self.do_top(ctx, 'Top Words Posted', self.tracking['words'])
+        await self.do_top(ctx, self.tracking['words'], 'Top Words Posted')
         
     @commands.command()
     @is_developer()
