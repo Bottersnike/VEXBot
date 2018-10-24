@@ -114,13 +114,10 @@ class VEX:
                     self.tracking['voice'][member.id] += round(time_spent)
                     self.save_tracking()
         
-    @commands.command()
-    async def top(self, ctx):
-        if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
-            return
 
-        msg = '**Tᴏᴘ Mᴇssᴀɢᴇ Cᴏᴜɴᴛs:**\n'
-        counts = sorted(self.tracking['messages'].items(), key=lambda x: x[1], reverse=True)
+    async def do_top(self, ctx, data, title):
+        msg = f'**{title}:**\n'
+        counts = sorted(data.items(), key=lambda x: x[1], reverse=True)
         counts = counts[:10]
         
         for n, i in enumerate(counts):
@@ -129,22 +126,34 @@ class VEX:
             msg += f'#{n + 1}: `{member}` _({i[1]})_\n'
         
         await ctx.send(msg)
+
+    @commands.command()
+    async def top(self, ctx):
+        if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
+            return
+
+        await self.do_top(ctx, self.tracking['messages'], 'Tᴏᴘ Mᴇssᴀɢᴇ Cᴏᴜɴᴛs')
         
     @commands.command()
     async def vtop(self, ctx):
         if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
             return
 
-        msg = '**Tᴏᴘ Tɪᴍᴇ ɪɴ VC:**\n'
-        counts = sorted(self.tracking['voice'].items(), key=lambda x: x[1], reverse=True)
-        counts = counts[:10]
-        
-        for n, i in enumerate(counts):
-            member = ctx.guild.get_member(i[0]) or i[0]
-            member = str(member).replace('`', '')
-            msg += f'#{n + 1}: `{member}` _({i[1]} seconds)_\n'
-        
-        await ctx.send(msg)
+        await self.do_top(ctx, 'Tᴏᴘ Tɪᴍᴇ ɪɴ VC', self.tracking['voice'])
+
+    @commands.command()
+    async def ctop(self, ctx):
+        if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
+            return
+
+        await self.do_top(ctx, 'Top Characters Posted', self.tracking['chars'])
+
+    @commands.command()
+    async def wtop(self, ctx):
+        if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
+            return
+
+        await self.do_top(ctx, 'Top Words Posted', self.tracking['words'])
         
     @commands.command()
     @is_developer()
