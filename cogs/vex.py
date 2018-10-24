@@ -54,7 +54,7 @@ class VEX:
             msg.write('\n'.join(f'{k}:{self.tracking["words"][k]}' for k in self.tracking['words']))
     
     def load_tracking(self):
-        tracking = {'voice': {}, 'messages': {}}
+        tracking = {'voice': {}, 'messages': {}, 'words': {}, 'chars': {}}
         
         if os.path.exists(self.VOICE_F):
             with open(self.VOICE_F) as voice:
