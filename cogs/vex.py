@@ -24,7 +24,7 @@ SELF_SETTING = {
 KIERAN_ROLE_ID = 500000697522192405
 
 
-TRACK_GUILD = 498229213866754058
+TRACK_GUILD = 302848055986749441
 
 
 class VEX:
@@ -35,9 +35,9 @@ class VEX:
 
     def __init__(self, bot):
         self.bot = bot
-        
+
         self.tracking = self.load_tracking()
-        
+
         self.join_times = {}
 
     async def __local_check(self, ctx):
@@ -52,10 +52,10 @@ class VEX:
             msg.write('\n'.join(f'{k}:{self.tracking["chars"][k]}' for k in self.tracking['chars']))
         with open(self.WORD_F, 'w') as msg:
             msg.write('\n'.join(f'{k}:{self.tracking["words"][k]}' for k in self.tracking['words']))
-    
+
     def load_tracking(self):
         tracking = {'voice': {}, 'messages': {}, 'words': {}, 'chars': {}}
-        
+
         if os.path.exists(self.VOICE_F):
             with open(self.VOICE_F) as voice:
                 for line in voice:
@@ -83,9 +83,9 @@ class VEX:
                     if not line.strip():
                         continue
                     tracking['words'][int(line.split(':', 1)[0])] = int(line.split(':', 1)[1])
-        
+
         return tracking
-        
+
     async def on_message(self, message):
         if message.guild is not None and message.guild.id == TRACK_GUILD:
             if message.author.id not in self.tracking['messages']:
@@ -99,7 +99,7 @@ class VEX:
             self.tracking['chars'][message.author.id] += len(message.content)
             self.tracking['words'][message.author.id] += message.content.count(' ') + 1
             self.save_tracking()
-    
+
     async def on_voice_state_update(self, member, before, after):
         if member.guild is not None and member.guild.id == TRACK_GUILD:
             if before.channel is None and after.channel is not None:
@@ -113,18 +113,18 @@ class VEX:
                         self.tracking['voice'][member.id] = 0
                     self.tracking['voice'][member.id] += round(time_spent)
                     self.save_tracking()
-        
+
 
     async def do_top(self, ctx, data, title):
         msg = f'**{title}:**\n'
         counts = sorted(data.items(), key=lambda x: x[1], reverse=True)
         counts = counts[:10]
-        
+
         for n, i in enumerate(counts):
             member = ctx.guild.get_member(i[0]) or i[0]
             member = str(member).replace('`', '')
             msg += f'#{n + 1}: `{member}` _({i[1]})_\n'
-        
+
         await ctx.send(msg)
 
     async def all_time(self, ctx, name, title):
@@ -138,7 +138,7 @@ class VEX:
                             data[int(m)] = int(c)
                         else:
                             data[int(m)] += int(c)
-        
+
         await self.do_top(ctx, data, title)
 
     @commands.command()
@@ -156,7 +156,7 @@ class VEX:
             return
 
         await self.do_top(ctx, self.tracking['messages'], 'Tᴏᴘ Mᴇssᴀɢᴇ Cᴏᴜɴᴛs')
-        
+
     @commands.command()
     async def vtop(self, ctx):
         if ctx.guild is None or ctx.guild.id != TRACK_GUILD:
@@ -177,7 +177,7 @@ class VEX:
             return
 
         await self.do_top(ctx, self.tracking['words'], 'Top Words Posted')
-        
+
     @commands.command()
     @is_developer()
     async def list_roles(self, ctx):
@@ -191,37 +191,43 @@ class VEX:
 
     @commands.command()
     async def iam(self, ctx, *, role):
+        if ctx.guild != 494517059036774435:
+            return
+
         if role not in SELF_SETTING:
             e = discord.Embed(title='No role found under that name', color=0xbb5555)
             await ctx.send(embed=e, delete_after=5)
             return await ctx.message.delete()
-        
+
         role_id = SELF_SETTING[role]
         role = discord.utils.get(ctx.guild.roles, id=role_id)
-        
+
         await ctx.author.add_roles(role)
         e = discord.Embed(title='Added role succesfully!', color=0x55bbbb)
         await ctx.send(embed=e, delete_after=5)
         await ctx.message.delete()
-    
+
     @commands.command()
     async def iamnot(self, ctx, *, role):
+        if ctx.guild != 494517059036774435:
+            return
+
         if role not in SELF_SETTING:
             e = discord.Embed(title='No role found undr that name', color=0xbb5555)
             await ctx.send(embed=e, delete_after=5)
             return await ctx.message.delete()
-            
+
         role_id = SELF_SETTING[role]
         role = discord.utils.get(ctx.guild.roles, id=role_id)
-        
+
         await ctx.author.remove_roles(role)
         e = discord.Embed(title='Removed role succesfully!', color=0x55bbbb)
         await ctx.send(embed=e, delete_after=5)
         await ctx.message.delete()
-    
+
     @commands.command()
     async def roles(self, ctx):
-        if ctx.guild is None:
+        if ctx.guild != 494517059036774435:
             return
 
         e = discord.Embed(title='Roles setup for self-service:', color=0xffff00)
@@ -229,13 +235,13 @@ class VEX:
             role = discord.utils.get(ctx.guild.roles, id=SELF_SETTING[i])
             if role is not None:
                 e.add_field(name=role.name, value=f'`{ctx.prefix}iam {i}`')
-        
+
         await ctx.send(embed=e)
-    
+
     async def on_member_join(self, member):
         if member.guild.id == 498229213866754058:
             await member.add_roles(discord.Object(KIERAN_ROLE_ID))
 
-        
+
 def setup(bot):
     bot.add_cog(VEX(bot))
