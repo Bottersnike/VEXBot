@@ -87,6 +87,9 @@ class VEX:
         return tracking
 
     async def on_message(self, message):
+        if message.author.bot:
+            return
+
         if message.guild is not None and message.guild.id == TRACK_GUILD:
             if message.author.id not in self.tracking['messages']:
                 self.tracking['messages'][message.author.id] = 0
@@ -101,6 +104,9 @@ class VEX:
             self.save_tracking()
 
     async def on_voice_state_update(self, member, before, after):
+        if member.bot:
+            return
+
         if member.guild is not None and member.guild.id == TRACK_GUILD:
             if before.channel is None and after.channel is not None:
                 self.join_times[member.id] = time.time()
