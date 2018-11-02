@@ -31,13 +31,6 @@ class Predictions:
 
         red, blue = red.split(','), blue.split(',')
 
-        for i in red:
-            if i in blue:
-                e = discord.Embed(colour=0xff7043)
-                e.description = 'A team cannot be in both alliances; that makes no sense.'
-
-                return await ctx.send(embed=e)
-
         for i in red + blue:
             if i not in self.pred.teams:
                 e = discord.Embed(colour=0xff7043)
