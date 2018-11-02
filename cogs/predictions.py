@@ -23,6 +23,32 @@ class Predictions:
         return right_channel(ctx)
 
     @commands.command()
+    async def leaderboard(self, ctx, team=None):
+        """Show the predicted international leaderboard."""
+        leaderboard = self.pred.generate_leaderboard()
+
+        if team is not None:
+            team = team.upper()
+            if team not in leaderboard:
+                e = discord.Embed(colour=0xff7043)
+                e.description = f'Unknown team {team}.'
+
+                return await ctx.send(embed=e)
+
+            e = discord.Embed(colour=0xffeb3b)
+            e.description = f'I have {team} as being in place #{leaderboard.index(team) + 1}'
+
+            return await ctx.send(embed=e)
+
+        e = discord.Embed(title='Leaderboard', colour=0xffeb3b)
+        desc = ''
+        for i in range(10):
+            desc += f'{i + 1}: {leaderboard[i]}\n'
+        e.description = desc
+
+        await ctx.send(embed=e)
+
+    @commands.command()
     async def predict(self, ctx, red, blue):
         """Predict the results of a match between two alliances.
         Alliances should be comma seperated lists of teams with no spaces.
@@ -57,6 +83,7 @@ class Predictions:
         e.set_footer(text='Red: ' + ', '.join(red) + ' - Blue: ' + ', '.join(blue))
 
         await ctx.send(embed=e)
+
 
 def setup(bot):
     bot.add_cog(Predictions(bot))
