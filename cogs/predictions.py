@@ -29,6 +29,7 @@ class Predictions:
 
         e.g. `predict 6969A,6969B 420C,420D`"""
 
+        red, blue = red.upper(), blue.upper()
         red, blue = red.split(','), blue.split(',')
 
         for i in red + blue:
