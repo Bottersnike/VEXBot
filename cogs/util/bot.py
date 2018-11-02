@@ -2,6 +2,7 @@ import traceback
 import datetime
 import logging
 import sys
+import re
 
 from discord.ext import commands
 import ruamel.yaml as yaml

@@ -49,8 +49,9 @@ class Core:
     async def reload(self, ctx, *, cog: str):
         '''Reloads an extension'''
         try:
-            ctx.bot.unload_extension(cog)
-            ctx.bot.load_extension(cog)
+            async with ctx.typing():
+                ctx.bot.unload_extension(cog)
+                ctx.bot.load_extension(cog)
         except Exception as e:
             await ctx.send('Failed to load: `{}`\n```py\n{}\n```'.format(cog, e))
         else:
@@ -60,13 +61,14 @@ class Core:
     @is_developer()
     async def reload_all(self, ctx):
         '''Reloads all extensions'''
-        for extension in ctx.bot.extensions.copy():
-            ctx.bot.unload_extension(extension)
-            try:
-                ctx.bot.load_extension(extension)
-            except Exception as e:
-                await ctx.send('Failed to load `{}`:\n```py\n{}\n```'.format(extension, e))
-                return
+        async with ctx.typing():
+            for extension in ctx.bot.extensions.copy():
+                ctx.bot.unload_extension(extension)
+                try:
+                    ctx.bot.load_extension(extension)
+                except Exception as e:
+                    await ctx.send('Failed to load `{}`:\n```py\n{}\n```'.format(extension, e))
+                    return
 
         await ctx.send('\N{OK HAND SIGN} Reloaded {} cogs successfully'.format(len(ctx.bot.extensions)))
 
@@ -74,8 +76,9 @@ class Core:
     @is_developer()
     async def reload_config(self, ctx):
         '''Reload the config file'''
-        with open('config/config.yml', 'r') as f:
-            ctx.bot.config = yaml.load(f, Loader=yaml.Loader)
+        async with ctx.typing():
+            with open('config/config.yml', 'r') as f:
+                ctx.bot.config = yaml.load(f, Loader=yaml.Loader)
 
         await ctx.send('Reloaded config file.')
 

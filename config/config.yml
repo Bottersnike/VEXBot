@@ -25,6 +25,7 @@ ids:
 cogs:
   - cogs.core
   - cogs.vex
+  - cogs.predictions
 
 global_coms:
   - hi
