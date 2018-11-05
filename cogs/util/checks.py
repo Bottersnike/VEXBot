@@ -37,6 +37,12 @@ def right_channel(ctx: commands.Context) -> bool:
     if ctx.guild is None:
         return True
 
+    for c in ctx.guild.channels:
+        if c.id in blocked or (allowed is not None and c.id in allowed):
+            break
+    else:
+        return True
+
     if allowed is not None:
         if ctx.channel.id not in allowed:
             if not ctx.command.name in globs:
