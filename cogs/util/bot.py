@@ -1,5 +1,6 @@
 import traceback
 import datetime
+import aiohttp
 import logging
 import sys
 import re
@@ -34,6 +35,7 @@ class VEXBot(commands.AutoShardedBot):
             *args,
             **kwargs
         )
+        self.session = aiohttp.ClientSession(loop=self.loop)
 
     async def get_prefix(self, message):
         if message.guild is None:

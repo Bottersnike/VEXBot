@@ -9,18 +9,45 @@ from discord.ext import commands
 import ruamel.yaml as yaml
 import discord
 
-from .util.checks import right_channel
+from .util.checks import right_channel, is_developer
 from .util.predict import Predictor
 
 
 class Predictions:
     def __init__(self, bot):
         self.bot = bot
-
-        self.pred = Predictor()
+        self.pred = Predictor(bot)
 
     async def __local_check(self, ctx):
-        return right_channel(ctx)
+        if right_channel(ctx):
+            if self.pred.locked:
+                e = discord.Embed(colour=0xff0000)
+                if self.pred.prog is not None:
+                    a, b = map(lambda x: int(x.strip()), self.pred.prog.split('/'))
+                    length = 25
+                    filled = round((a / b) * length)
+                    bar = '█' * filled + '░' * (length - filled)
+
+                    total = (time.time() - self.pred.lock_start) / (a / b)
+                    left = (self.pred.lock_start + total) - time.time()
+                    min, sec = map(round, divmod(left, 60))
+
+                    e.title = f'Predicitions are locked as simulations are being run. ETA: {min}m, {sec}s.'
+                    e.set_footer(text=f'Progress: {self.pred.prog}')
+                    e.description = bar
+                else:
+                    e.title = 'Predicitions are locked as simulations are being run. Please try again in 1-2 minutes.'
+                await ctx.send(embed=e)
+                raise ctx.bot.SilentCheckFailure()
+            return True
+        raise ctx.bot.SilentCheckFailure()
+
+    @commands.command()
+    @is_developer()
+    async def update_matches(self, ctx):
+        async with ctx.typing():
+            await self.pred.update_matches(ctx)
+        await ctx.send('Matches updated from vexDB!')
 
     @commands.command()
     async def leaderboard(self, ctx, team=None):
