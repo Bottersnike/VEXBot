@@ -76,6 +76,33 @@ class Predictions:
         await ctx.send(embed=e)
 
     @commands.command()
+    async def sku_leaderboard(self, ctx, sku: str):
+        async with ctx.typing():
+            teams = await self.pred.get_teams_for_sku(sku)
+
+        if not teams:
+            e = discord.Embed(colour=0xff0000)
+            e.description = f'No teams found for SKU {sku}'
+            return await ctx.send(embed=e)
+        leaderboard = self.pred.generate_leaderboard()
+        teams = [
+            ((leaderboard.index(i) + 1) if i in leaderboard else 2 ** 32, i)
+            for i in teams
+        ]
+        teams.sort()
+
+        e = discord.Embed(title='Leaderboard', colour=0xffeb3b)
+        desc = ''
+        for i, team in teams:
+            if i != 2 ** 32:
+                desc += f'#{i}: {team}\n'
+        e.description = desc
+        not_seen = sum(i[0] == 2 ** 32 for i in teams)
+        if not_seen:
+            e.set_footer(text=f'{not_seen} team{"" if not_seen == 1 else "s"} unknown.')
+        return await ctx.send(embed=e)
+
+    @commands.command()
     async def predict(self, ctx, red, blue):
         """Predict the results of a match between two alliances.
         Alliances should be comma seperated lists of teams with no spaces.

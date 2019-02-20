@@ -11,6 +11,7 @@ class Predictor:
     TEAMS = ['red1', 'red2', 'blue1', 'blue2']
 
     MATCHES = 'https://api.vexdb.io/v1/get_matches?program=VRC&season=current&status=past'
+    GET_TEAMS = 'https://api.vexdb.io/v1/get_teams?sku={}'
     LIMIT_START = '&limit_start={}'
     NODATA = '&nodata=true'
 
@@ -66,6 +67,14 @@ class Predictor:
             skus.add(match['sku'])
             matches.append(match)
         return skus, matches, new_dat
+
+    async def get_teams_for_sku(self, sku):
+        url = self.GET_TEAMS.format(sku)
+        async with self.bot.session.get(url) as resp:
+            data = (await resp.json())['result']
+        return [
+            i['number'] for i in data
+        ]
 
     async def update_matches(self, ctx=None, force=False):
         skus, matches, new_dat = await self.get_matches(force)
