@@ -86,8 +86,11 @@ class Predictor:
             self.skus = self.skus.union(skus)
             self.matches += matches
 
-            with open(self.DATA_FILE) as data_file:
-                old_dat = json.load(data_file)
+            try:
+                with open(self.DATA_FILE) as data_file:
+                    old_dat = json.load(data_file)
+            except FileNotFoundError:
+                old_dat = {}
 
         if ctx is not None:
             await ctx.send(f'Found {len(skus)} new skus and {len(matches)} new matches.')
