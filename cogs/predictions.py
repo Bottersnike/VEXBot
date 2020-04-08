@@ -19,7 +19,7 @@ class Predictions(Cog):
         self.bot = bot
         self.pred = Predictor(bot)
 
-    async def __local_check(self, ctx):
+    async def cog_check(self, ctx):
         if self.pred.locked:
             e = discord.Embed(colour=0xff0000)
             if self.pred.prog is not None:
