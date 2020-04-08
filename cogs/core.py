@@ -3,26 +3,26 @@ import asyncio
 import inspect
 import sys
 
-from discord.ext import commands
+from discord.ext.commands import *
 import ruamel.yaml as yaml
 import discord
 
 from .util.checks import right_channel, is_developer, is_owner
 
 
-class Core:
+class Core(Cog):
     """Core commands"""
     async def __local_check(self, ctx):
         return right_channel(ctx)
 
-    @commands.command(aliases=['quit', 'kill'])
+    @command(aliases=['quit', 'kill'])
     @is_developer()
     async def die(self, ctx):
         '''Disconnects the bot from Discord.'''
         await ctx.send('Logging out...')
         await ctx.bot.logout()
 
-    @commands.command()
+    @command()
     @is_developer()
     async def load(self, ctx, *, cog: str):
         '''Loads an extension'''
@@ -33,7 +33,7 @@ class Core:
         else:
             await ctx.send('\N{OK HAND SIGN} Loaded cog {} successfully!'.format(cog))
 
-    @commands.command()
+    @command()
     @is_developer()
     async def unload(self, ctx, *, cog: str):
         '''Unloads an extension'''
@@ -44,7 +44,7 @@ class Core:
         else:
             await ctx.send('\N{OK HAND SIGN} Unloaded cog {} successfully!'.format(cog))
 
-    @commands.group(invoke_without_command=True)
+    @group(invoke_without_command=True)
     @is_developer()
     async def reload(self, ctx, *, cog: str):
         '''Reloads an extension'''
@@ -82,7 +82,7 @@ class Core:
 
         await ctx.send('Reloaded config file.')
 
-    @commands.command(aliases=['git_pull', 'pull'])
+    @command(aliases=['git_pull', 'pull'])
     @is_developer()
     async def update(self, ctx):
         '''Updates the bot from git'''
@@ -102,7 +102,7 @@ class Core:
 
         await ctx.send('`Git` response: ```diff\n{}\n{}```'.format(stdout, stderr))
 
-    @commands.command(aliases=['eval'])
+    @command(aliases=['eval'])
     @is_owner()
     async def debug(self, ctx, *, code: str):
         '''Evaluates code'''

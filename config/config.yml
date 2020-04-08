@@ -24,7 +24,6 @@ ids:
 # D.py setup
 cogs:
   - cogs.core
-  - cogs.vex
   - cogs.predictions
 
 global_coms:

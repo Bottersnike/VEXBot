@@ -2,3 +2,4 @@ token.txt
 *.pyc
 __pycache__/*
 state/*.txt
+data.json

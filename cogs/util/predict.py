@@ -92,12 +92,13 @@ class Predictor:
         if ctx is not None:
             await ctx.send(f'Found {len(skus)} new skus and {len(matches)} new matches.')
 
-        for i in new_dat:
-            old_dat[i] = new_dat[i]
-        with open(self.DATA_FILE, 'w') as data_file:
-            json.dump(old_dat, data_file)
+        def saver():
+            old_dat.update(new_dat)
+            with open(self.DATA_FILE, 'w') as data_file:
+                json.dump(old_dat, data_file)
+            self.populate_teams()
 
-        self.populate_teams()
+        await self.bot.loop.run_in_executor(None, saver)
         if ctx is not None:
             await ctx.send('Saved data and re-populated teams. Begining simulation.')
 

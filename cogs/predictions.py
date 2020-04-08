@@ -5,7 +5,7 @@ import time
 import sys
 import os
 
-from discord.ext import commands
+from discord.ext.commands import *
 import ruamel.yaml as yaml
 import discord
 
@@ -13,8 +13,9 @@ from .util.checks import right_channel, is_developer
 from .util.predict import Predictor
 
 
-class Predictions:
+class Predictions(Cog):
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.pred = Predictor(bot)
 
@@ -42,14 +43,14 @@ class Predictions:
             return True
         raise ctx.bot.SilentCheckFailure()
 
-    @commands.command()
+    @command()
     @is_developer()
     async def update_matches(self, ctx):
         async with ctx.typing():
             await self.pred.update_matches(ctx)
         await ctx.send('Matches updated from vexDB!')
 
-    @commands.command()
+    @command()
     async def leaderboard(self, ctx, team=None):
         """Show the predicted international leaderboard."""
         leaderboard = self.pred.generate_leaderboard()
@@ -75,7 +76,7 @@ class Predictions:
 
         await ctx.send(embed=e)
 
-    @commands.command()
+    @command()
     async def sku_leaderboard(self, ctx, sku: str):
         async with ctx.typing():
             teams = await self.pred.get_teams_for_sku(sku)
@@ -102,7 +103,7 @@ class Predictions:
             e.set_footer(text=f'{not_seen} team{"" if not_seen == 1 else "s"} unknown.')
         return await ctx.send(embed=e)
 
-    @commands.command()
+    @command()
     async def predict(self, ctx, red, blue):
         """Predict the results of a match between two alliances.
         Alliances should be comma seperated lists of teams with no spaces.

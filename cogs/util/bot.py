@@ -32,6 +32,7 @@ class VEXBot(commands.AutoShardedBot):
         super().__init__(
             command_prefix='!',
             command_not_found=HelperBodge('No command called `{}` found.'),
+            guild_subscriptions=False,
             *args,
             **kwargs
         )
@@ -148,7 +149,7 @@ class VEXBot(commands.AutoShardedBot):
         for cog in cogs:
             try:
                 self.load_extension(cog)
-            except Exception as e:
+            except Exception:
                 self.logger.exception('Failed to load cog {}.'.format(cog))
             else:
                 self.logger.info('Loaded cog {}.'.format(cog))
