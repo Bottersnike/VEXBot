@@ -33,7 +33,7 @@ The leaderboard is roughly based off a team's `mu` value.
 When predicting a match, the reliability of a team is taken into account. If one team scores highly, but unreliably, while another scores a little lower, but reliably, the highest scoring team may not always be predicted to win.
 """.strip(), inline=False)
         e.add_field(name="Can I view the mu and sigma values for a team?", value="""
-I'm working on adding a command for just that. For now, if you DM me I can manually export them for specific teams.
+Yes! Use `=details [team number]` to have a peek behind the scenes.
 """.strip(), inline=False)
 
         await ctx.send(embed=e)
@@ -49,7 +49,7 @@ I'm working on adding a command for just that. For now, if you DM me I can manua
         e = discord.Embed(title=f'Details for {team}', colour=0xffeb3b)
         mu = pred.teams[team].mu
         sigma = pred.teams[team].sigma
-        e.description = f'mu=`{mu}`, sigma=`{round(sigma, 3)}`'
+        e.description = f'mu=`{round(mu, 3)}`, sigma=`{round(sigma, 3)}`'
         await ctx.send(embed=e)
 
 def setup(bot):
