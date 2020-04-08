@@ -135,6 +135,7 @@ class Predictor:
                     self.teams[match[team]] = trueskill.Rating()
 
     def simulate_matches(self):
+        return
         self.locked = True
         self.lock_start = time.time()
         for n, match in enumerate(self.matches):
@@ -158,7 +159,7 @@ class Predictor:
                         blue_ts.append(self.teams[name])
                         blue_names.append(name)
 
-            time.sleep(0.0001)  # Allow asyncio to interrupt us if it wants to
+            time.sleep(0)  # Allow asyncio to interrupt us if it wants to
             red_ts, blue_ts = trueskill.rate([red_ts, blue_ts],
                                              ranks=[match['bluescore'],
                                                     match['redscore']])

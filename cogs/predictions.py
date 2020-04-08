@@ -54,6 +54,25 @@ class Predictions(Cog):
         leaderboard = self.pred.generate_leaderboard()
 
         if team is not None:
+            if team.isdigit():
+                teams = []
+                for n, i in enumerate(leaderboard):
+                    if i.startswith(team) and i[len(team):].isalpha():
+                        teams.append((n, i))
+                if not teams:
+                    e = discord.Embed(colour=0xff7043)
+                    e.description = f'No teams found for organization {team}.'
+
+                    return await ctx.send(embed=e)
+                
+                e = discord.Embed(title='Leaderboard', colour=0xffeb3b)
+                desc = ''
+                for n, i in teams:
+                    desc += f'{n + 1}: {i}\n'
+                e.description = desc
+
+                return await ctx.send(embed=e)
+
             team = team.upper()
             if team not in leaderboard:
                 e = discord.Embed(colour=0xff7043)
@@ -72,6 +91,12 @@ class Predictions(Cog):
             desc += f'{i + 1}: {leaderboard[i]}\n'
         e.description = desc
 
+        await ctx.send(embed=e)
+
+    @command()
+    async def bracket(self, ctx):
+        e = discord.Embed(colour=0xff7043)
+        e.description = f'This command isn\'t finished yet. `=sku_leaderboard` might do what you want for now.'
         await ctx.send(embed=e)
 
     @command()
