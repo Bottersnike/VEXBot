@@ -1,5 +1,5 @@
+from collections import defaultdict
 import itertools
-import trueskill
 import asyncio
 import time
 import json
@@ -17,6 +17,8 @@ class Predictor:
 
     def __init__(self, bot):
         self.bot = bot
+
+        self.avgs = defaultdict(lambda: [])
 
         self.teams = {}
         self.matches = []
@@ -54,7 +56,7 @@ class Predictor:
         skus = set()
         new_dat = {}
 
-        for n, match in enumerate(data):
+        for match in data:
             if match['sku'] in self.skus and not force:
                 continue
             if match['redscore'] == 0 and match['bluescore'] == 0:
@@ -99,8 +101,6 @@ class Predictor:
             old_dat.update(new_dat)
             with open(self.DATA_FILE, 'w') as data_file:
                 json.dump(old_dat, data_file)
-            self.populate_teams()
-
         await self.bot.loop.run_in_executor(None, saver)
         if ctx is not None:
             await ctx.send('Saved data and re-populated teams. Begining simulation.')
@@ -128,122 +128,74 @@ class Predictor:
                     continue
                 self.matches.append(j)
 
-    def populate_teams(self):
-        for match in self.matches:
-            for team in self.TEAMS:
-                if match[team] and match[team] not in self.teams:
-                    self.teams[match[team]] = trueskill.Rating()
-
     def simulate_matches(self):
+        sku_avg = defaultdict(lambda: [])
+        for i in self.matches:
+            sku_avg[i["sku"]].append(i["redscore"])
+            sku_avg[i["sku"]].append(i["bluescore"])
+        sku_avg = {
+            k: sum(v) / len(v)
+            for k, v in sku_avg.items()
+        }
+
         self.locked = True
         self.lock_start = time.time()
-        for n, match in enumerate(self.matches):
-            # print(f'\r  :: {n + 1} / {len(self.matches)}', end='')
+        self.avgs.clear()
+        for i in self.matches:
+            r1, r2 = i["red1"], i["red2"]
+            b1, b2 = i["blue1"], i["blue2"]
+            m2 = (i["redscore"] - i["bluescore"]) / sku_avg[i["sku"]]
+            bs = i["bluescore"]
+            rs = i["redscore"]
 
-            if match in self.simulated:
-                continue
-            self.simulated.append(match)
+            bb = -m2 / (i["redscore"] or 1)
+            rb = m2 / (i["bluescore"] or 1)
 
-            self.prog = f'{n + 1} / {len(self.matches)}'
-
-            red_ts, red_names = [], []
-            blue_ts, blue_names = [], []
-            for i in self.TEAMS:
-                name = match[i]
-                if name:
-                    if i.startswith('red'):
-                        red_ts.append(self.teams[name])
-                        red_names.append(name)
-                    else:
-                        blue_ts.append(self.teams[name])
-                        blue_names.append(name)
-
-            time.sleep(0)  # Allow asyncio to interrupt us if it wants to
-            red_ts, blue_ts = trueskill.rate([red_ts, blue_ts],
-                                             ranks=[match['bluescore'],
-                                                    match['redscore']])
-
-            tn = [*zip(red_ts, red_names)] + [*zip(blue_ts, blue_names)]
-            for t, n in tn:
-               self.teams[n] = t
-
+            self.avgs[r1].append((rs, rb))
+            self.avgs[r2].append((rs, rb))
+            self.avgs[b1].append((bs, bb))
+            self.avgs[b2].append((bs, bb))
+        for i in self.avgs:
+            self.avgs[i] = (
+                sum(j[0] for j in self.avgs[i]) / len(self.avgs[i]),
+                sum(j[1] for j in self.avgs[i]) / len(self.avgs[i])
+            )
         self.locked = False
 
-    def win_probability(self, red, blue):
-        delta_mu = sum(r.mu for r in red) - sum(r.mu for r in blue)
-        sum_sigma = sum(r.sigma ** 2 for r in itertools.chain(red, blue))
-        size = len(red) + len(blue)
-        ts = trueskill.global_env()
-        denom = math.sqrt(size * (ts.beta * ts.beta) + sum_sigma)
-        return ts.cdf(delta_mu / denom)
+    def predict_scores(self, red, blue):
+        rs = sum(i[0] for i in red) / len(red)
+        bs = sum(i[0] for i in blue) / len(blue)
+        rb = sum(i[1] for i in red) / len(red)
+        bb = sum(i[1] for i in blue) / len(blue)
+        nrs = rs - rb * rs
+        bs -= bb * bs
+        return (nrs, bs)
 
     def generate_leaderboard(self):
         return sorted(
-            self.teams.keys(), key=lambda x: trueskill.expose(self.teams[x]),
+            self.avgs.keys(), key=lambda x: self.avgs[x][0],
             reverse=True
         )
 
-    def print_leaderboard(self):
-        leaderboard = self.generate_leaderboard()
-
-        printf('\r%r%i     ===== RESUTLS =====')
-        for i in range(25):
-            line = str(i + 1).rjust(4)
-            line += ' | '
-            line += (leaderboard[i] + ",").ljust(8)
-            line += ' μ=' + str(round(self.teams[leaderboard[i]].mu, 1))
-            line += ' σ=' + str(round(self.teams[leaderboard[i]].sigma, 2))
-
-            print(line)
-
-    def test_accuracy(self):
-        success = []
-
-        for n, match in enumerate(self.matches):
-            print(f'\r  :: {n + 1} / {len(self.matches)}', end='')
-
-            red, blue = [] , []
-            for i in self.TEAMS:
-                name = match[i]
-                if name:
-                    if i.startswith('red'):
-                        red.append(self.teams[name])
-                    else:
-                        blue.append(self.teams[name])
-
-            win_probability = self.win_probability(red, blue)
-
-            if win_probability > 50:
-                success.append(match['redscore'] > match['bluescore'])
-            elif win_probability == 50:
-                success.append(match['redscore'] == match['bluescore'])
-            else:
-                success.append(match['redscore'] < match['bluescore'])
-
-        print()
-        print(f'{round(sum(success) / len(success) * 100, 2)}%')
-
     def compare(self, red, blue):
-        red, blue = red.split(','), blue.split(',')
+        red, blue = red.upper().split(','), blue.upper().split(',')
 
         for i in red:
             if i in blue:
-                return 'A team cannot be in both alliances; that makes no sense'
+                return ('A team cannot be in both alliances; that makes no sense', None)
 
         for i in red + blue:
-            if i not in self.teams:
-                return 'Unknown team passed'
+            if i not in self.avgs:
+                return (f'Unknown team: {i}', None)
 
-        red, blue = [self.teams[i] for i in red], [self.teams[i] for i in blue]
+        red = [self.avgs[i] for i in red]
+        blue = [self.avgs[i] for i in blue]
 
-        win_probability = round(self.win_probability(red, blue) * 100, 2)
+        red_score, blue_score = self.predict_scores(red, blue)
+        red_score = round(red_score)
+        blue_score = round(blue_score)
 
-        if win_probability == 50:
-            return 'I reccon it\'d be a perfect draw!'
-        elif win_probability > 50:
-            return f'I reccon red has a {win_probability}% chance of winning'
-        else:
-            return f'I reccon blue has a {100 - win_probability}% chance of winning'
+        return red_score, blue_score
 
 
 if __name__ == '__main__':

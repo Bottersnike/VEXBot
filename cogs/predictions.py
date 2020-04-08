@@ -133,32 +133,24 @@ class Predictions(Cog):
 
         e.g. `predict 6969A,6969B 420C,420D`"""
 
-        red, blue = red.upper(), blue.upper()
-        red, blue = red.split(','), blue.split(',')
-
-        for i in red + blue:
-            if i not in self.pred.teams:
-                e = discord.Embed(colour=0xff7043)
-                e.description = f'Unknown team {i}.'
-
-                return await ctx.send(embed=e)
-
-        red_ts, blue_ts = [self.pred.teams[i] for i in red], [self.pred.teams[i] for i in blue]
-
-        win_probability = round(self.pred.win_probability(red_ts, blue_ts) * 100, 2)
+        red_score, blue_score = self.pred.compare(red, blue)
+        if blue_score is None:
+            e = discord.Embed(colour=0xff7043)
+            e.description = red_score
+            return await ctx.send(embed=e)
 
         e = discord.Embed()
-        if win_probability == 50:
-            e.description = 'I reckon it\'d be a perfect **draw**!'
+        e.add_field(name='Red alliance', value=f'{red_score}')
+        e.add_field(name='Blue alliance', value=f'{blue_score}')
+        
+        if red_score == blue_score:
             e.colour = 0x4caf50
-        elif win_probability > 50:
-            e.description = f'I reckon red have a **{win_probability}%** chance of winning'
+        elif red_score > blue_score:
             e.colour = 0xe53935
         else:
-            e.description = f'I reckon blue have a **{100 - win_probability}%** chance of winning'
             e.colour = 0x3f51b5
 
-        e.set_footer(text='Red: ' + ', '.join(red) + ' - Blue: ' + ', '.join(blue))
+        e.set_footer(text='Red: ' + ', '.join(red.upper().split(',')) + ' - Blue: ' + ', '.join(blue.upper().split(',')))
 
         await ctx.send(embed=e)
 
