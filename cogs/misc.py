@@ -52,5 +52,31 @@ Yes! Use `=details [team number]` to have a peek behind the scenes.
         e.description = f'mu=`{round(mu, 3)}`, sigma=`{round(sigma, 3)}`'
         await ctx.send(embed=e)
 
+    @command()
+    async def test_accuracy(self, ctx):
+        pred = ctx.bot.cogs["Predictions"].pred
+        success = []
+
+        for n, match in enumerate(pred.matches):
+            red, blue = [] , []
+            for i in pred.TEAMS:
+                name = match[i]
+                if name:
+                    if i.startswith('red'):
+                        red.append(pred.teams[name])
+                    else:
+                        blue.append(pred.teams[name])
+
+            win_probability = pred.win_probability(red, blue)
+            if win_probability > 50:
+                success.append(match['redscore'] > match['bluescore'])
+            elif win_probability == 50:
+                success.append(match['redscore'] == match['bluescore'])
+            else:
+                success.append(match['redscore'] < match['bluescore'])
+
+        await ctx.send(f'{round(sum(success) / len(success) * 100, 2)}%')
+
+
 def setup(bot):
     bot.add_cog(Misc())
