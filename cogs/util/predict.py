@@ -114,8 +114,11 @@ class Predictor:
         await self.bot.loop.run_in_executor(executor, self.simulate_matches)
 
     def populate_matches(self):
-        with open(self.DATA_FILE) as data_file:
-            match_data = json.load(data_file)
+        try:
+            with open(self.DATA_FILE) as data_file:
+                match_data = json.load(data_file)
+        except FileNotFoundError:
+            match_data = {}
 
         for i in match_data:
             self.skus.add(i)
