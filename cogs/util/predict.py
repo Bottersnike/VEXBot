@@ -135,7 +135,6 @@ class Predictor:
                     self.teams[match[team]] = trueskill.Rating()
 
     def simulate_matches(self):
-        return
         self.locked = True
         self.lock_start = time.time()
         for n, match in enumerate(self.matches):

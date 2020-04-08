@@ -3,7 +3,7 @@ token_file:
 
 prefix:
   default:
-    '='
+    '==='
 
 # Discord-based config
 ids:
