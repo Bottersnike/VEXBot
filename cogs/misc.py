@@ -16,7 +16,7 @@ class Misc(Cog):
     async def faq(self, ctx):
         '''Answers some FAQs'''
 
-        e = discord.Embed(title='Leaderboard', colour=0xffeb3b)
+        e = discord.Embed(title='FAQ', colour=0xffeb3b)
         e.add_field(name="Is this always correct", value="""
 No. These are just predictions based on a mathematical model.
 The accuracy of the predictions is only as good as that model.
@@ -37,7 +37,20 @@ I'm working on adding a command for just that. For now, if you DM me I can manua
 """.strip(), inline=False)
 
         await ctx.send(embed=e)
-
+    
+    @command()
+    async def details(self, ctx, team:str):
+        pred = ctx.bot.cogs["Predictions"].pred
+        team = team.upper().strip()
+        if team not in pred.teams:
+            e = discord.Embed(colour=0xff7043)
+            e.description = f'Team {team} not found.'
+            return await ctx.send(embed=e)
+        e = discord.Embed(title=f'Details for {team}', colour=0xffeb3b)
+        mu = pred.teams[team].mu
+        sigma = pred.teams[team].sigma
+        e.description = f'mu=`{mu}`, sigma=`{round(sigma, 3)}`'
+        await ctx.send(embed=e)
 
 def setup(bot):
     bot.add_cog(Misc())
