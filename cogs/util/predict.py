@@ -27,7 +27,6 @@ class Predictor:
         self.simulated = []
 
         self.populate_matches()
-        self.populate_teams()
 
         print(f'{len(self.matches)} matches, {len(self.teams)} teams found')
         print(f'Simulating {len(self.matches)} matches..')
