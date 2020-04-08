@@ -7,14 +7,11 @@ from discord.ext.commands import *
 import ruamel.yaml as yaml
 import discord
 
-from .util.checks import right_channel, is_developer, is_owner
+from .util.checks import is_developer, is_owner
 
 
 class Core(Cog):
     """Core commands"""
-    async def __local_check(self, ctx):
-        return right_channel(ctx)
-
     @command(aliases=['quit', 'kill'])
     @is_developer()
     async def die(self, ctx):
